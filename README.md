@@ -1,5 +1,9 @@
 # GoNetworkMonitor
 
+![GitHub stars](https://img.shields.io/github/stars/Ali-Marandi/GoNetworkMonitor?style=social)
+![License](https://img.shields.io/github/license/Ali-Marandi/GoNetworkMonitor)
+![Go Version](https://img.shields.io/badge/go-1.21%2B-blue)
+
 A lightweight, high-performance network monitoring tool written in Go. Designed for real-time traffic analysis and statistics gathering with minimal resource overhead.
 
 ## Features
