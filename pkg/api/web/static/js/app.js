@@ -539,3 +539,26 @@ setInterval(() => {
     console.log('Could not check capture status');
   }
 })();
+
+
+// ---- Help Center Tab Management ----
+document.querySelectorAll('.help-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabName = btn.dataset.tab;
+    
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.help-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.help-tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to clicked tab and corresponding content
+    btn.classList.add('active');
+    const content = document.getElementById(`tab-${tabName}`);
+    if (content) content.classList.add('active');
+  });
+});
+
+// Initialize first tab as active on page load
+window.addEventListener('load', () => {
+  const firstTab = document.querySelector('.help-tab-btn');
+  if (firstTab) firstTab.click();
+});

@@ -45,13 +45,17 @@
         <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
         Prometheus
       </a>
+      <a href="#" class="nav-item" data-page="help">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        Help & Guide
+      </a>
       <a href="#" class="nav-item" data-page="settings">
         <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         Settings
       </a>
     </nav>
     <div class="sidebar-footer">
-      <div class="version-badge">v2.0.0</div>
+      <div class="version-badge">v3.1.0 Enterprise</div>
     </div>
   </aside>
 
@@ -251,6 +255,124 @@
             <div class="table-header"><h3>Recent Intelligence Events</h3></div>
             <div id="intelEvents" class="alerts-list">
                <div class="empty-state">System learning patterns...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help & Guide Page -->
+    <div class="page" id="page-help">
+      <div class="section-card">
+        <h3>📚 Help Center & Installation Guide</h3>
+        <div style="padding: 20px;">
+          <div class="help-tabs">
+            <button class="help-tab-btn active" data-tab="getting-started">Getting Started</button>
+            <button class="help-tab-btn" data-tab="windows-setup">Windows Setup</button>
+            <button class="help-tab-btn" data-tab="features">Features</button>
+            <button class="help-tab-btn" data-tab="troubleshooting">Troubleshooting</button>
+          </div>
+
+          <!-- Getting Started Tab -->
+          <div class="help-tab-content active" id="tab-getting-started">
+            <h4>Welcome to GoNetworkMonitor Enterprise v3.1.0</h4>
+            <p>This guide will help you get started with network monitoring in minutes.</p>
+            <div class="help-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h5>Select Network Interface</h5>
+                <p>Choose your active network card from the dropdown at the top. Usually it's the one with an IP address starting with 192.168 or 10.</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h5>Start Capture</h5>
+                <p>Click the "Start Capture" button. The dashboard will begin showing real-time traffic data.</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h5>Monitor & Analyze</h5>
+                <p>Watch the KPI cards, charts, and tables update in real-time. Check the AI Intelligence tab for anomaly detection.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Windows Setup Tab -->
+          <div class="help-tab-content" id="tab-windows-setup">
+            <h4>Windows Installation & Setup</h4>
+            <div class="help-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h5>Install Npcap (Required)</h5>
+                <p><strong>⚠️ CRITICAL:</strong> Download and install <a href="https://npcap.com/#download" target="_blank">Npcap</a>. During installation, <strong>MUST enable</strong> "Install Npcap in WinPcap API-compatible Mode".</p>
+                <p style="color: #ef4444; font-weight: bold;">Without this, the program cannot capture network traffic!</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h5>Run as Administrator</h5>
+                <p>Right-click <code>gonetmon-v3.1.0-windows-amd64.exe</code> → Select <strong>Run as Administrator</strong>.</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h5>Allow Firewall Access</h5>
+                <p>If Windows Firewall prompts, click <strong>Allow Access</strong> to permit network monitoring.</p>
+              </div>
+            </div>
+            <div class="help-step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <h5>Open Dashboard</h5>
+                <p>Open your browser and go to <code>http://localhost:8080</code>. You're ready to monitor!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features Tab -->
+          <div class="help-tab-content" id="tab-features">
+            <h4>Enterprise Features</h4>
+            <div class="feature-item">
+              <h5>🤖 AI Intelligence</h5>
+              <p>Automatic anomaly detection using statistical analysis. Detects DDoS spikes and unusual traffic patterns.</p>
+            </div>
+            <div class="feature-item">
+              <h5>💾 Persistent Storage</h5>
+              <p>All data is saved to SQLite database (<code>network_monitor.db</code>). Historical data survives application restarts.</p>
+            </div>
+            <div class="feature-item">
+              <h5>📊 Prometheus Metrics</h5>
+              <p>Export metrics to Grafana, Datadog, or any Prometheus-compatible monitoring stack via <code>/metrics</code> endpoint.</p>
+            </div>
+            <div class="feature-item">
+              <h5>🔍 Real-time Analysis</h5>
+              <p>Live packet capture, protocol analysis, connection tracking, and bandwidth monitoring.</p>
+            </div>
+          </div>
+
+          <!-- Troubleshooting Tab -->
+          <div class="help-tab-content" id="tab-troubleshooting">
+            <h4>Common Issues & Solutions</h4>
+            <div class="troubleshoot-item">
+              <h5>❌ "No interfaces found"</h5>
+              <p><strong>Solution:</strong> Ensure Npcap is installed with WinPcap mode enabled. Restart the application as Administrator.</p>
+            </div>
+            <div class="troubleshoot-item">
+              <h5>❌ Dashboard won't load</h5>
+              <p><strong>Solution:</strong> Check if port 8080 is already in use. Edit <code>config.json</code> and change the port number.</p>
+            </div>
+            <div class="troubleshoot-item">
+              <h5>❌ No traffic data showing</h5>
+              <p><strong>Solution:</strong> Select the correct network interface (usually the one with your IP address). Generate some network traffic (open a website).</p>
+            </div>
+            <div class="troubleshoot-item">
+              <h5>❌ Permission denied error</h5>
+              <p><strong>Solution:</strong> Always run as Administrator. Network packet capture requires elevated privileges.</p>
             </div>
           </div>
         </div>
