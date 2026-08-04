@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Ali-Marandi/GoNetworkMonitor/pkg/stats"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
@@ -285,6 +286,10 @@ func (e *Engine) processLoop() {
 			return
 		case pkt := <-e.packets:
 			e.stats.Update(pkt)
+
+			// Update Prometheus counters
+			stats.RecordPacket(e.iface, pkt.Protocol, pkt.Length)
+
 			// Notify listeners
 			for _, ch := range e.Listeners {
 				select {

@@ -14,7 +14,9 @@ import (
 	"github.com/Ali-Marandi/GoNetworkMonitor/pkg/capture"
 	"github.com/Ali-Marandi/GoNetworkMonitor/pkg/config"
 	"github.com/Ali-Marandi/GoNetworkMonitor/pkg/stats"
+	"github.com/Ali-Marandi/GoNetworkMonitor/pkg/storage"
 	"github.com/gorilla/websocket"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var upgrader = websocket.Upgrader{
@@ -34,6 +36,8 @@ type Server struct {
 	connTable  *stats.ConnectionTable
 	alertMgr   *alert.Manager
 	alertChecker *alert.Checker
+	anomalyDet   *alert.AnomalyDetector
+	db         *storage.DB
 	mux        *http.ServeMux
 
 	wsMu      sync.Mutex
@@ -49,7 +53,17 @@ func NewServer(cfg *config.Config) *Server {
 		alertMgr:   alert.NewManager(500),
 		wsClients:  make(map[*websocket.Conn]bool),
 	}
+
+	// Initialize persistent storage
+	db, err := storage.NewDB(cfg.DataDir)
+	if err != nil {
+		log.Printf("[api] Warning: persistent storage disabled: %v", err)
+	} else {
+		s.db = db
+	}
+
 	s.alertChecker = alert.NewChecker(s.alertMgr)
+	s.anomalyDet = alert.NewAnomalyDetector(s.alertMgr, 60, 3.5)
 	s.mux = http.NewServeMux()
 	s.registerRoutes()
 	return s
@@ -76,6 +90,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/alerts", s.handleAlerts)
 	s.mux.HandleFunc("/api/config", s.handleConfig)
 	s.mux.HandleFunc("/api/ws", s.handleWebSocket)
+
+	// Prometheus metrics endpoint
+	s.mux.Handle("/metrics", promhttp.Handler())
 
 	// Serve embedded web UI
 	staticFS, _ := fs.Sub(webFiles, "web")
@@ -282,11 +299,22 @@ func (s *Server) collectTimeSeries() {
 		}
 		s.timeSeries.Add(dp)
 
+		// Update Prometheus metrics
+		stats.UpdateRates(s.cfg.Get().Interface, dp.PacketsPerSec, dp.BytesPerSec, s.connTable.Count())
+
+		// Persist to DB every sample
+		if s.db != nil {
+			s.db.SaveStats(dp.PacketsPerSec, dp.BytesPerSec, dp.MbpsIn)
+		}
+
 		// Check alerts
 		cfg := s.cfg.Get()
 		if cfg.Alerts.Enabled {
 			s.alertChecker.CheckBandwidth(snap.BytesPerSec, cfg.Alerts.BandwidthMbps)
 			s.alertChecker.CheckPPS(snap.PacketsPerSec, cfg.Alerts.PacketsPerSecond)
+
+			// Intelligence: Anomaly detection
+			s.anomalyDet.Observe(snap.PacketsPerSec)
 		}
 	}
 }

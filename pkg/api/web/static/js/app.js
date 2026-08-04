@@ -52,6 +52,7 @@ function navigateTo(page) {
   if (page === 'interfaces') loadInterfaces();
   if (page === 'connections') loadConnections();
   if (page === 'alerts') loadAlerts();
+  if (page === 'intelligence') loadIntelligence();
   if (page === 'settings') loadConfig();
 }
 
@@ -151,6 +152,35 @@ function initCharts() {
           position: 'bottom',
           labels: { color: '#94a3b8', padding: 12, font: { size: 12 } },
         },
+      },
+    },
+  });
+
+  // Anomaly Probability Chart
+  const anomalyCtx = $('anomalyChart').getContext('2d');
+  state.charts.anomaly = new Chart(anomalyCtx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Anomaly Score',
+        data: [],
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 0 },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { type: 'time', time: { unit: 'second' }, grid: { color: 'rgba(45,55,72,0.5)' } },
+        y: { min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(45,55,72,0.5)' } },
       },
     },
   });
@@ -356,7 +386,7 @@ async function loadAlerts() {
       critical: '&#9888;',
     };
 
-    list.innerHTML = [...alerts].reverse().map(a => `
+    const renderAlert = (a) => `
       <div class="alert-item alert-item--${a.severity}">
         <div class="alert-icon">${iconMap[a.severity] || '!'}</div>
         <div style="flex:1">
@@ -364,10 +394,35 @@ async function loadAlerts() {
           <div class="alert-message">${a.message}</div>
           <div class="alert-time">${new Date(a.timestamp).toLocaleString()} &bull; Value: ${a.value?.toFixed(2)} / Threshold: ${a.threshold?.toFixed(2)}</div>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+
+    list.innerHTML = [...alerts].reverse().map(renderAlert).join('');
+
+    // Also update intelligence page if active
+    if (document.querySelector('#page-intelligence.active')) {
+      const intelList = $('intelEvents');
+      const intelAlerts = alerts.filter(a => a.title.includes('Anomaly'));
+      if (intelAlerts.length === 0) {
+        intelList.innerHTML = '<div class="empty-state">System learning patterns...</div>';
+      } else {
+        intelList.innerHTML = [...intelAlerts].reverse().map(renderAlert).join('');
+      }
+    }
   } catch (e) {
     console.error('Failed to load alerts', e);
+  }
+}
+
+async function loadIntelligence() {
+  await loadAlerts();
+  // Simulate anomaly score for UI
+  const chart = state.charts.anomaly;
+  if (chart.data.labels.length === 0) {
+    for (let i = 0; i < 60; i++) {
+      chart.data.labels.push(new Date(Date.now() - (60 - i) * 1000));
+      chart.data.datasets[0].data.push(Math.random() * 20);
+    }
+    chart.update();
   }
 }
 
