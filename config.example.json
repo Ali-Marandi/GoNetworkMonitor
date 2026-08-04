@@ -1,0 +1,16 @@
+{
+  "listen_addr": "0.0.0.0",
+  "port": 8080,
+  "interface": "auto",
+  "snap_len": 65535,
+  "promiscuous": true,
+  "bpf_filter": "",
+  "alerts": {
+    "enabled": true,
+    "bandwidth_mbps_threshold": 100,
+    "pps_threshold": 10000,
+    "new_conn_per_second_threshold": 500
+  },
+  "data_dir": "./data",
+  "max_history_seconds": 3600
+}

@@ -1,0 +1,31 @@
+# Binaries
+gonetmon
+gonetmon.exe
+dist/
+*.exe
+*.out
+
+# Data directory
+data/
+*.log
+
+# Config (keep example, ignore local)
+config.json
+!config.example.json
+
+# Go
+*.test
+*.prof
+coverage.out
+vendor/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+*.iml

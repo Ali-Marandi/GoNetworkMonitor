@@ -1,0 +1,214 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ master, main ]
+
+env:
+  GO_VERSION: '1.22'
+  APP_NAME: gonetmon
+
+jobs:
+  # ---- Test Job ----
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install libpcap
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+      - name: Run vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./... -v -race -coverprofile=coverage.out
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          flags: unittests
+
+  # ---- Build Job ----
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: linux-amd64
+            runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            ext: ''
+          - os: linux-arm64
+            runner: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            ext: ''
+            cross: true
+          - os: darwin-amd64
+            runner: macos-latest
+            goos: darwin
+            goarch: amd64
+            ext: ''
+          - os: darwin-arm64
+            runner: macos-latest
+            goos: darwin
+            goarch: arm64
+            ext: ''
+          - os: windows-amd64
+            runner: windows-latest
+            goos: windows
+            goarch: amd64
+            ext: '.exe'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install libpcap (Linux)
+        if: matrix.goos == 'linux' && !matrix.cross
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+      - name: Install cross-compile tools (Linux ARM64)
+        if: matrix.cross
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu libpcap-dev
+
+      - name: Install libpcap (macOS)
+        if: matrix.goos == 'darwin'
+        run: brew install libpcap
+
+      - name: Install npcap SDK (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          choco install npcap --yes
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+
+      - name: Get version from tag
+        id: version
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF_NAME:-dev}" >> $GITHUB_OUTPUT
+
+      - name: Build binary
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          CC: ${{ matrix.cross && 'aarch64-linux-gnu-gcc' || '' }}
+        run: |
+          mkdir -p dist
+          go build \
+            -ldflags="-s -w -X main.Version=${{ steps.version.outputs.VERSION }}" \
+            -o dist/${{ env.APP_NAME }}-${{ matrix.os }}${{ matrix.ext }} \
+            ./cmd/gonetmon/
+
+      - name: Package (Unix)
+        if: matrix.goos != 'windows'
+        run: |
+          cd dist
+          tar -czf ${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}.tar.gz \
+            ${{ env.APP_NAME }}-${{ matrix.os }} \
+            -C .. README.md LICENSE
+
+      - name: Package (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          cd dist
+          Compress-Archive -Path "${{ env.APP_NAME }}-${{ matrix.os }}${{ matrix.ext }}", "..\README.md", "..\LICENSE" `
+            -DestinationPath "${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-${{ matrix.os }}
+          path: dist/${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}.*
+
+  # ---- Release Job ----
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --oneline --no-merges | head -20)
+          else
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --oneline --no-merges)
+          fi
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "GoNetworkMonitor ${{ github.ref_name }}"
+          body: |
+            ## GoNetworkMonitor ${{ github.ref_name }}
+
+            A commercial-grade, high-performance network monitoring tool with a real-time web dashboard.
+
+            ### What's New
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ### Features
+            - Real-time packet capture with `gopacket`
+            - Protocol analysis (TCP, UDP, ICMP, DNS, HTTP, ARP)
+            - Modern web dashboard with live charts
+            - REST API and WebSocket streaming
+            - Alert system with configurable thresholds
+            - Connection tracking
+            - BPF filter support
+
+            ### Installation
+            Download the appropriate binary for your platform, extract, and run with `sudo`.
+
+            ### Checksums
+            See `SHA256SUMS.txt` for file integrity verification.
+          draft: false
+          prerelease: false
+          files: |
+            dist/*
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,102 @@
+package config
+
+import (
+	"encoding/json"
+	"os"
+	"sync"
+)
+
+// Config holds the application configuration.
+type Config struct {
+	mu sync.RWMutex
+
+	// Server settings
+	ListenAddr string `json:"listen_addr"`
+	Port       int    `json:"port"`
+
+	// Capture settings
+	Interface  string `json:"interface"`
+	SnapLen    int32  `json:"snap_len"`
+	Promiscuous bool  `json:"promiscuous"`
+	BPFFilter  string `json:"bpf_filter"`
+
+	// Alert thresholds
+	Alerts AlertConfig `json:"alerts"`
+
+	// Storage
+	DataDir     string `json:"data_dir"`
+	MaxHistory  int    `json:"max_history_seconds"`
+}
+
+// AlertConfig holds threshold-based alert settings.
+type AlertConfig struct {
+	Enabled          bool    `json:"enabled"`
+	BandwidthMbps    float64 `json:"bandwidth_mbps_threshold"`
+	PacketsPerSecond float64 `json:"pps_threshold"`
+	NewConnPerSecond float64 `json:"new_conn_per_second_threshold"`
+}
+
+// DefaultConfig returns a Config with sensible defaults.
+func DefaultConfig() *Config {
+	return &Config{
+		ListenAddr:  "0.0.0.0",
+		Port:        8080,
+		Interface:   "auto",
+		SnapLen:     65535,
+		Promiscuous: true,
+		BPFFilter:   "",
+		Alerts: AlertConfig{
+			Enabled:          true,
+			BandwidthMbps:    100,
+			PacketsPerSecond: 10000,
+			NewConnPerSecond: 500,
+		},
+		DataDir:    "./data",
+		MaxHistory: 3600,
+	}
+}
+
+// Load reads configuration from a JSON file.
+func Load(path string) (*Config, error) {
+	cfg := DefaultConfig()
+	f, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return cfg, nil
+		}
+		return nil, err
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
+// Save writes the current configuration to a JSON file.
+func (c *Config) Save(path string) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "  ")
+	return enc.Encode(c)
+}
+
+// Get returns a copy of the current config safely.
+func (c *Config) Get() Config {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return *c
+}
+
+// Update applies a new configuration atomically.
+func (c *Config) Update(newCfg Config) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	*c = newCfg
+}

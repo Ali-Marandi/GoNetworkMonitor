@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GoNetworkMonitor — Commercial Network Analyzer</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="16" fill="#6366f1"/>
+        <path d="M8 20 L12 12 L16 18 L20 10 L24 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="logo-text">GoNetMon</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item" data-page="interfaces">
+        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        Interfaces
+      </a>
+      <a href="#" class="nav-item" data-page="connections">
+        <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        Connections
+      </a>
+      <a href="#" class="nav-item" data-page="alerts">
+        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        Alerts
+        <span class="badge" id="alert-badge">0</span>
+      </a>
+      <a href="#" class="nav-item" data-page="settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="version-badge">v2.0.0</div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="capture-controls">
+          <select id="ifaceSelect" class="iface-select">
+            <option value="">Loading interfaces...</option>
+          </select>
+          <button id="startBtn" class="btn btn-primary">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Start Capture
+          </button>
+          <button id="stopBtn" class="btn btn-danger" disabled>
+            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+            Stop
+          </button>
+        </div>
+        <div class="status-indicator" id="statusIndicator">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Idle</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dashboard Page -->
+    <div class="page active" id="page-dashboard">
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--blue">
+            <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 00-6 0zm-4-4l2 2a7.074 7.074 0 0110 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          </div>
+          <div class="kpi-data">
+            <div class="kpi-value" id="kpi-pps">0</div>
+            <div class="kpi-label">Packets / sec</div>
+          </div>
+          <div class="kpi-trend" id="trend-pps">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--green">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="kpi-data">
+            <div class="kpi-value" id="kpi-mbps">0.00</div>
+            <div class="kpi-label">Mbps</div>
+          </div>
+          <div class="kpi-trend" id="trend-mbps">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--purple">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+          </div>
+          <div class="kpi-data">
+            <div class="kpi-value" id="kpi-total-packets">0</div>
+            <div class="kpi-label">Total Packets</div>
+          </div>
+          <div class="kpi-trend" id="trend-packets">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--orange">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          </div>
+          <div class="kpi-data">
+            <div class="kpi-value" id="kpi-alerts">0</div>
+            <div class="kpi-label">Active Alerts</div>
+          </div>
+          <div class="kpi-trend" id="trend-alerts">—</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card chart-card--wide">
+          <div class="chart-header">
+            <h3>Real-time Traffic</h3>
+            <div class="chart-legend">
+              <span class="legend-item legend-item--blue">Packets/s</span>
+              <span class="legend-item legend-item--green">Mbps</span>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="trafficChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Protocol Distribution</h3>
+          </div>
+          <div class="chart-body chart-body--donut">
+            <canvas id="protocolChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row -->
+      <div class="bottom-row">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Top Source IPs</h3>
+          </div>
+          <table class="data-table" id="topSrcTable">
+            <thead>
+              <tr><th>IP Address</th><th>Packets</th><th>Share</th></tr>
+            </thead>
+            <tbody id="topSrcBody">
+              <tr><td colspan="3" class="empty-row">No data yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Top Destination IPs</h3>
+          </div>
+          <table class="data-table" id="topDstTable">
+            <thead>
+              <tr><th>IP Address</th><th>Packets</th><th>Share</th></tr>
+            </thead>
+            <tbody id="topDstBody">
+              <tr><td colspan="3" class="empty-row">No data yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interfaces Page -->
+    <div class="page" id="page-interfaces">
+      <div class="section-card">
+        <h3>Available Network Interfaces</h3>
+        <div id="interfacesList" class="interfaces-grid"></div>
+      </div>
+    </div>
+
+    <!-- Connections Page -->
+    <div class="page" id="page-connections">
+      <div class="section-card">
+        <div class="table-header">
+          <h3>Active Connections</h3>
+          <span id="connCount" class="count-badge">0</span>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Source IP</th>
+                <th>Src Port</th>
+                <th>Destination IP</th>
+                <th>Dst Port</th>
+                <th>Packets</th>
+                <th>Bytes</th>
+                <th>Last Seen</th>
+              </tr>
+            </thead>
+            <tbody id="connectionsBody">
+              <tr><td colspan="8" class="empty-row">No connections tracked yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Page -->
+    <div class="page" id="page-alerts">
+      <div class="section-card">
+        <div class="table-header">
+          <h3>Alert Log</h3>
+          <button class="btn btn-sm" onclick="loadAlerts()">Refresh</button>
+        </div>
+        <div id="alertsList" class="alerts-list">
+          <div class="empty-state">No alerts triggered yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="page-settings">
+      <div class="section-card">
+        <h3>Configuration</h3>
+        <form id="configForm" class="config-form">
+          <div class="form-group">
+            <label>Listen Port</label>
+            <input type="number" id="cfg-port" class="form-input" value="8080" />
+          </div>
+          <div class="form-group">
+            <label>Snapshot Length</label>
+            <input type="number" id="cfg-snaplen" class="form-input" value="65535" />
+          </div>
+          <div class="form-group">
+            <label>BPF Filter</label>
+            <input type="text" id="cfg-bpf" class="form-input" placeholder="e.g. tcp port 80" />
+          </div>
+          <div class="form-group">
+            <label>Bandwidth Alert Threshold (Mbps)</label>
+            <input type="number" id="cfg-bw-threshold" class="form-input" value="100" />
+          </div>
+          <div class="form-group">
+            <label>PPS Alert Threshold</label>
+            <input type="number" id="cfg-pps-threshold" class="form-input" value="10000" />
+          </div>
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="cfg-alerts-enabled" checked />
+              <span class="toggle-slider"></span>
+              Enable Alerts
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Configuration</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
