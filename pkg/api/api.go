@@ -1,8 +1,10 @@
 package api
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"sync"
@@ -20,6 +22,9 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+
+//go:embed web/*
+var webFiles embed.FS
 
 // Server is the main HTTP/WebSocket API server.
 type Server struct {
@@ -73,8 +78,8 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("/api/ws", s.handleWebSocket)
 
 	// Serve embedded web UI
-	s.mux.HandleFunc("/", s.handleIndex)
-	s.mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static"))))
+	staticFS, _ := fs.Sub(webFiles, "web")
+	s.mux.Handle("/", http.FileServer(http.FS(staticFS)))
 }
 
 func jsonResponse(w http.ResponseWriter, data interface{}) {
@@ -87,14 +92,6 @@ func errorResponse(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
-}
-
-func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-	http.ServeFile(w, r, "./web/index.html")
 }
 
 func (s *Server) handleInterfaces(w http.ResponseWriter, r *http.Request) {
