@@ -52,6 +52,9 @@ func (ts *TimeSeries) GetAll() []DataPoint {
 func (ts *TimeSeries) GetLast(n int) []DataPoint {
 	ts.mu.RLock()
 	defer ts.mu.RUnlock()
+	if n <= 0 {
+		return []DataPoint{}
+	}
 	if n >= len(ts.points) {
 		result := make([]DataPoint, len(ts.points))
 		copy(result, ts.points)
