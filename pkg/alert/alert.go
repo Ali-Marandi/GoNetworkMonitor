@@ -91,6 +91,9 @@ func (m *Manager) GetAll() []Alert {
 func (m *Manager) GetRecent(n int) []Alert {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+	if n <= 0 {
+		return []Alert{}
+	}
 	if n >= len(m.alerts) {
 		result := make([]Alert, len(m.alerts))
 		copy(result, m.alerts)
