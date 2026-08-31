@@ -8,24 +8,24 @@ import (
 
 // Config holds the application configuration.
 type Config struct {
-	mu sync.RWMutex
+	mu *sync.RWMutex
 
 	// Server settings
 	ListenAddr string `json:"listen_addr"`
 	Port       int    `json:"port"`
 
 	// Capture settings
-	Interface  string `json:"interface"`
-	SnapLen    int32  `json:"snap_len"`
-	Promiscuous bool  `json:"promiscuous"`
-	BPFFilter  string `json:"bpf_filter"`
+	Interface   string `json:"interface"`
+	SnapLen     int32  `json:"snap_len"`
+	Promiscuous bool   `json:"promiscuous"`
+	BPFFilter   string `json:"bpf_filter"`
 
 	// Alert thresholds
 	Alerts AlertConfig `json:"alerts"`
 
 	// Storage
-	DataDir     string `json:"data_dir"`
-	MaxHistory  int    `json:"max_history_seconds"`
+	DataDir    string `json:"data_dir"`
+	MaxHistory int    `json:"max_history_seconds"`
 }
 
 // AlertConfig holds threshold-based alert settings.
@@ -39,6 +39,7 @@ type AlertConfig struct {
 // DefaultConfig returns a Config with sensible defaults.
 func DefaultConfig() *Config {
 	return &Config{
+		mu:          &sync.RWMutex{},
 		ListenAddr:  "0.0.0.0",
 		Port:        8080,
 		Interface:   "auto",
@@ -54,6 +55,13 @@ func DefaultConfig() *Config {
 		DataDir:    "./data",
 		MaxHistory: 3600,
 	}
+}
+
+func (c *Config) mutex() *sync.RWMutex {
+	if c.mu == nil {
+		c.mu = &sync.RWMutex{}
+	}
+	return c.mu
 }
 
 // Load reads configuration from a JSON file.
@@ -75,8 +83,8 @@ func Load(path string) (*Config, error) {
 
 // Save writes the current configuration to a JSON file.
 func (c *Config) Save(path string) error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mutex().RLock()
+	defer c.mutex().RUnlock()
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -89,14 +97,29 @@ func (c *Config) Save(path string) error {
 
 // Get returns a copy of the current config safely.
 func (c *Config) Get() Config {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mutex().RLock()
+	defer c.mutex().RUnlock()
 	return *c
 }
 
-// Update applies a new configuration atomically.
+// Update applies a new configuration atomically while preserving the lock.
 func (c *Config) Update(newCfg Config) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mutex().Lock()
+	defer c.mutex().Unlock()
+	newCfg.mu = c.mu
 	*c = newCfg
+}
+
+// SetInterface updates the capture interface without copying the lock.
+func (c *Config) SetInterface(name string) {
+	c.mutex().Lock()
+	defer c.mutex().Unlock()
+	c.Interface = name
+}
+
+// SetPort updates the HTTP port without copying the lock.
+func (c *Config) SetPort(port int) {
+	c.mutex().Lock()
+	defer c.mutex().Unlock()
+	c.Port = port
 }
