@@ -106,7 +106,7 @@ type Checker struct {
 	manager            *Manager
 	lastBandwidthAlert time.Time
 	lastPPSAlert       time.Time
-	cooldown           time.Duration
+	cooldown            time.Duration
 }
 
 // NewChecker creates a new threshold checker.
