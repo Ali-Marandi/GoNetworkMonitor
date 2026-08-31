@@ -29,10 +29,10 @@ type Alert struct {
 
 // Manager manages alert generation and history.
 type Manager struct {
-	mu       sync.RWMutex
-	alerts   []Alert
-	maxSize  int
-	counter  int
+	mu        sync.RWMutex
+	alerts    []Alert
+	maxSize   int
+	counter   int
 	Listeners []chan Alert
 }
 
@@ -91,6 +91,9 @@ func (m *Manager) GetAll() []Alert {
 func (m *Manager) GetRecent(n int) []Alert {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+	if n <= 0 {
+		return []Alert{}
+	}
 	if n >= len(m.alerts) {
 		result := make([]Alert, len(m.alerts))
 		copy(result, m.alerts)
@@ -103,10 +106,10 @@ func (m *Manager) GetRecent(n int) []Alert {
 
 // Checker holds state for threshold checking.
 type Checker struct {
-	manager          *Manager
+	manager            *Manager
 	lastBandwidthAlert time.Time
-	lastPPSAlert     time.Time
-	cooldown         time.Duration
+	lastPPSAlert       time.Time
+	cooldown            time.Duration
 }
 
 // NewChecker creates a new threshold checker.

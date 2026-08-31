@@ -8,11 +8,11 @@ import (
 
 // AnomalyDetector uses moving averages to detect traffic spikes.
 type AnomalyDetector struct {
-	mu            sync.Mutex
-	manager       *Manager
-	history       []float64
-	windowSize    int
-	threshold     float64 // Standard deviations from mean
+	mu         sync.Mutex
+	manager    *Manager
+	history    []float64
+	windowSize int
+	threshold  float64 // Standard deviations from mean
 }
 
 // NewAnomalyDetector creates a new detector.

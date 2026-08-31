@@ -1,10 +1,10 @@
 APP_NAME    := gonetmon
-VERSION     := 2.0.0
+VERSION     := 3.1.0
 BUILD_DIR   := dist
 LDFLAGS     := -ldflags "-X main.Version=$(VERSION) -s -w"
 CGO_FLAGS   := CGO_ENABLED=1
 
-.PHONY: all build clean test linux windows darwin release
+.PHONY: all build clean test vet fmt linux linux-arm64 release run docker-build help
 
 all: build
 
@@ -49,7 +49,7 @@ release: clean linux
 
 run:
 	@echo "Starting GoNetworkMonitor..."
-	sudo ./gonetmon --port 8080
+	sudo ./$(BUILD_DIR)/$(APP_NAME) --port 8080
 
 docker-build:
 	docker build -t gonetworkmonitor:$(VERSION) .
@@ -61,6 +61,8 @@ help:
 	@echo "  make build       Build for current platform"
 	@echo "  make linux       Cross-compile for Linux amd64"
 	@echo "  make test        Run all tests"
+	@echo "  make vet         Run go vet"
+	@echo "  make fmt         Format Go source"
 	@echo "  make clean       Remove build artifacts"
-	@echo "  make release     Build and package for release"
-	@echo "  make run         Run the application (requires sudo)"
+	@echo "  make release     Build and package for Linux amd64"
+	@echo "  make run         Run the application (requires privileges)"
