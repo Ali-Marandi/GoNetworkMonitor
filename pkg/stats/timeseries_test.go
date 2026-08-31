@@ -20,6 +20,18 @@ func TestTimeSeriesRollingWindow(t *testing.T) {
 	}
 }
 
+func TestTimeSeriesGetLastHandlesNonPositiveN(t *testing.T) {
+	ts := NewTimeSeries(2)
+	ts.Add(DataPoint{PacketsPerSec: 1})
+
+	for _, n := range []int{0, -1} {
+		got := ts.GetLast(n)
+		if len(got) != 0 {
+			t.Fatalf("GetLast(%d) len = %d, want 0", n, len(got))
+		}
+	}
+}
+
 func TestConnectionTableEvictsOldest(t *testing.T) {
 	ct := NewConnectionTable(2)
 	first := ConnectionKey{SrcIP: "10.0.0.1", DstIP: "10.0.0.2", SrcPort: 1, DstPort: 2, Proto: "TCP"}
