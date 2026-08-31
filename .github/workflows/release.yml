@@ -8,11 +8,10 @@ on:
     branches: [ master, main ]
 
 env:
-  GO_VERSION: '1.22'
+  GO_VERSION: '1.25.x'
   APP_NAME: gonetmon
 
 jobs:
-  # ---- Test Job ----
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -27,6 +26,9 @@ jobs:
       - name: Install libpcap
         run: sudo apt-get update && sudo apt-get install -y libpcap-dev
 
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+
       - name: Run vet
         run: go vet ./...
 
@@ -39,7 +41,6 @@ jobs:
           file: ./coverage.out
           flags: unittests
 
-  # ---- Build Job ----
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.runner }}
@@ -142,7 +143,6 @@ jobs:
           name: ${{ env.APP_NAME }}-${{ matrix.os }}
           path: dist/${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}-${{ matrix.os }}.*
 
-  # ---- Release Job ----
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -203,7 +203,7 @@ jobs:
             - BPF filter support
 
             ### Installation
-            Download the appropriate binary for your platform, extract, and run with `sudo`.
+            Download the appropriate binary for your platform, extract, and run with `sudo` or Administrator privileges.
 
             ### Checksums
             See `SHA256SUMS.txt` for file integrity verification.
