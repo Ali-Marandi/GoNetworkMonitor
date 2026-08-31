@@ -40,7 +40,7 @@ type AlertConfig struct {
 func DefaultConfig() *Config {
 	return &Config{
 		mu:          &sync.RWMutex{},
-		ListenAddr:  "0.0.0.0",
+		ListenAddr:  "127.0.0.1",
 		Port:        8080,
 		Interface:   "auto",
 		SnapLen:     65535,
@@ -83,8 +83,9 @@ func Load(path string) (*Config, error) {
 
 // Save writes the current configuration to a JSON file.
 func (c *Config) Save(path string) error {
-	c.mutex().RLock()
-	defer c.mutex().RUnlock()
+	mu := c.mutex()
+	mu.RLock()
+	defer mu.RUnlock()
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -97,29 +98,33 @@ func (c *Config) Save(path string) error {
 
 // Get returns a copy of the current config safely.
 func (c *Config) Get() Config {
-	c.mutex().RLock()
-	defer c.mutex().RUnlock()
+	mu := c.mutex()
+	mu.RLock()
+	defer mu.RUnlock()
 	return *c
 }
 
 // Update applies a new configuration atomically while preserving the lock.
 func (c *Config) Update(newCfg Config) {
-	c.mutex().Lock()
-	defer c.mutex().Unlock()
+	mu := c.mutex()
+	mu.Lock()
+	defer mu.Unlock()
 	newCfg.mu = c.mu
 	*c = newCfg
 }
 
 // SetInterface updates the capture interface without copying the lock.
 func (c *Config) SetInterface(name string) {
-	c.mutex().Lock()
-	defer c.mutex().Unlock()
+	mu := c.mutex()
+	mu.Lock()
+	defer mu.Unlock()
 	c.Interface = name
 }
 
 // SetPort updates the HTTP port without copying the lock.
 func (c *Config) SetPort(port int) {
-	c.mutex().Lock()
-	defer c.mutex().Unlock()
+	mu := c.mutex()
+	mu.Lock()
+	defer mu.Unlock()
 	c.Port = port
 }
