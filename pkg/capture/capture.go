@@ -16,27 +16,27 @@ import (
 
 // PacketInfo holds parsed information about a single captured packet.
 type PacketInfo struct {
-	Timestamp   time.Time
-	SrcIP       string
-	DstIP       string
-	SrcPort     uint16
-	DstPort     uint16
-	Protocol    string
-	Length      int
-	TCPFlags    string
-	DNSQuery    string
-	HTTPMethod  string
-	HTTPHost    string
+	Timestamp  time.Time
+	SrcIP      string
+	DstIP      string
+	SrcPort    uint16
+	DstPort    uint16
+	Protocol   string
+	Length     int
+	TCPFlags   string
+	DNSQuery   string
+	HTTPMethod string
+	HTTPHost   string
 }
 
 // Stats holds aggregated statistics for a capture session.
 type Stats struct {
 	mu sync.RWMutex
 
-	TotalPackets  int64
-	TotalBytes    int64
-	StartTime     time.Time
-	LastUpdated   time.Time
+	TotalPackets int64
+	TotalBytes   int64
+	StartTime    time.Time
+	LastUpdated  time.Time
 
 	// Protocol distribution
 	ProtocolCounts map[string]int64
@@ -119,15 +119,15 @@ func (s *Stats) Snapshot() StatsSnapshot {
 	defer s.mu.RUnlock()
 
 	snap := StatsSnapshot{
-		TotalPackets:  atomic.LoadInt64(&s.TotalPackets),
-		TotalBytes:    atomic.LoadInt64(&s.TotalBytes),
-		StartTime:     s.StartTime,
-		LastUpdated:   s.LastUpdated,
-		PacketsPerSec: s.PacketsPerSec,
-		BytesPerSec:   s.BytesPerSec,
+		TotalPackets:   atomic.LoadInt64(&s.TotalPackets),
+		TotalBytes:     atomic.LoadInt64(&s.TotalBytes),
+		StartTime:      s.StartTime,
+		LastUpdated:    s.LastUpdated,
+		PacketsPerSec:  s.PacketsPerSec,
+		BytesPerSec:    s.BytesPerSec,
 		ProtocolCounts: make(map[string]int64),
-		TopSrcIPs:     make(map[string]int64),
-		TopDstIPs:     make(map[string]int64),
+		TopSrcIPs:      make(map[string]int64),
+		TopDstIPs:      make(map[string]int64),
 	}
 
 	for k, v := range s.ProtocolCounts {
@@ -153,17 +153,17 @@ func (s *Stats) Snapshot() StatsSnapshot {
 
 // StatsSnapshot is a point-in-time copy of statistics.
 type StatsSnapshot struct {
-	TotalPackets     int64              `json:"total_packets"`
-	TotalBytes       int64              `json:"total_bytes"`
-	StartTime        time.Time          `json:"start_time"`
-	LastUpdated      time.Time          `json:"last_updated"`
-	PacketsPerSec    float64            `json:"packets_per_sec"`
-	BytesPerSec      float64            `json:"bytes_per_sec"`
-	AvgPacketsPerSec float64            `json:"avg_packets_per_sec"`
-	AvgBytesPerSec   float64            `json:"avg_bytes_per_sec"`
-	ProtocolCounts   map[string]int64   `json:"protocol_counts"`
-	TopSrcIPs        map[string]int64   `json:"top_src_ips"`
-	TopDstIPs        map[string]int64   `json:"top_dst_ips"`
+	TotalPackets     int64            `json:"total_packets"`
+	TotalBytes       int64            `json:"total_bytes"`
+	StartTime        time.Time        `json:"start_time"`
+	LastUpdated      time.Time        `json:"last_updated"`
+	PacketsPerSec    float64          `json:"packets_per_sec"`
+	BytesPerSec      float64          `json:"bytes_per_sec"`
+	AvgPacketsPerSec float64          `json:"avg_packets_per_sec"`
+	AvgBytesPerSec   float64          `json:"avg_bytes_per_sec"`
+	ProtocolCounts   map[string]int64 `json:"protocol_counts"`
+	TopSrcIPs        map[string]int64 `json:"top_src_ips"`
+	TopDstIPs        map[string]int64 `json:"top_dst_ips"`
 }
 
 // Engine manages the packet capture lifecycle.
@@ -421,11 +421,11 @@ func ListInterfaces() ([]InterfaceInfo, error) {
 			addrStrs = append(addrStrs, a.String())
 		}
 		result = append(result, InterfaceInfo{
-			Name:    iface.Name,
-			Flags:   iface.Flags.String(),
-			Addrs:   addrStrs,
-			MTU:     iface.MTU,
-			HWAddr:  iface.HardwareAddr.String(),
+			Name:   iface.Name,
+			Flags:  iface.Flags.String(),
+			Addrs:  addrStrs,
+			MTU:    iface.MTU,
+			HWAddr: iface.HardwareAddr.String(),
 		})
 	}
 	return result, nil

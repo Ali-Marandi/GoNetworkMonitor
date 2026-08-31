@@ -7,18 +7,18 @@ import (
 
 // DataPoint represents a single time-series data point.
 type DataPoint struct {
-	Timestamp    time.Time `json:"timestamp"`
-	PacketsPerSec float64  `json:"packets_per_sec"`
-	BytesPerSec   float64  `json:"bytes_per_sec"`
-	MbpsIn        float64  `json:"mbps_in"`
-	MbpsOut       float64  `json:"mbps_out"`
+	Timestamp     time.Time `json:"timestamp"`
+	PacketsPerSec float64   `json:"packets_per_sec"`
+	BytesPerSec   float64   `json:"bytes_per_sec"`
+	MbpsIn        float64   `json:"mbps_in"`
+	MbpsOut       float64   `json:"mbps_out"`
 }
 
 // TimeSeries stores a rolling window of data points.
 type TimeSeries struct {
-	mu       sync.RWMutex
-	points   []DataPoint
-	maxSize  int
+	mu      sync.RWMutex
+	points  []DataPoint
+	maxSize int
 }
 
 // NewTimeSeries creates a new time series with a maximum number of points.
@@ -64,13 +64,13 @@ func (ts *TimeSeries) GetLast(n int) []DataPoint {
 
 // ConnectionEntry tracks a single observed connection.
 type ConnectionEntry struct {
-	SrcIP    string    `json:"src_ip"`
-	DstIP    string    `json:"dst_ip"`
-	SrcPort  uint16    `json:"src_port"`
-	DstPort  uint16    `json:"dst_port"`
-	Protocol string    `json:"protocol"`
-	Packets  int64     `json:"packets"`
-	Bytes    int64     `json:"bytes"`
+	SrcIP     string    `json:"src_ip"`
+	DstIP     string    `json:"dst_ip"`
+	SrcPort   uint16    `json:"src_port"`
+	DstPort   uint16    `json:"dst_port"`
+	Protocol  string    `json:"protocol"`
+	Packets   int64     `json:"packets"`
+	Bytes     int64     `json:"bytes"`
 	FirstSeen time.Time `json:"first_seen"`
 	LastSeen  time.Time `json:"last_seen"`
 }

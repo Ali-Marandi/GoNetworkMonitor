@@ -20,7 +20,7 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:     func(r *http.Request) bool { return true },
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
@@ -30,15 +30,15 @@ var webFiles embed.FS
 
 // Server is the main HTTP/WebSocket API server.
 type Server struct {
-	cfg        *config.Config
-	engine     *capture.Engine
-	timeSeries *stats.TimeSeries
-	connTable  *stats.ConnectionTable
-	alertMgr   *alert.Manager
+	cfg          *config.Config
+	engine       *capture.Engine
+	timeSeries   *stats.TimeSeries
+	connTable    *stats.ConnectionTable
+	alertMgr     *alert.Manager
 	alertChecker *alert.Checker
 	anomalyDet   *alert.AnomalyDetector
-	db         *storage.DB
-	mux        *http.ServeMux
+	db           *storage.DB
+	mux          *http.ServeMux
 
 	wsMu      sync.Mutex
 	wsClients map[*websocket.Conn]bool
@@ -269,9 +269,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			}
 			snap := s.engine.Stats().Snapshot()
 			msg, _ := json.Marshal(map[string]interface{}{
-				"type":  "stats",
-				"data":  snap,
-				"time":  time.Now().Unix(),
+				"type": "stats",
+				"data": snap,
+				"time": time.Now().Unix(),
 			})
 			conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
 			if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
@@ -292,7 +292,7 @@ func (s *Server) collectTimeSeries() {
 		<-ticker.C
 		snap := s.engine.Stats().Snapshot()
 		dp := stats.DataPoint{
-			Timestamp:    time.Now(),
+			Timestamp:     time.Now(),
 			PacketsPerSec: snap.PacketsPerSec,
 			BytesPerSec:   snap.BytesPerSec,
 			MbpsIn:        snap.BytesPerSec * 8 / 1_000_000,
